@@ -26,7 +26,7 @@ to update the display.
 
 The KVV offers a [live timetable](http://live.kvv.de). A quick look
 at the network traffic (or at the embedded Javascript code) reveals that
-some easy to handle JSON can be downloaded e.g. for the tram stop "Pionierstraße" using [simple http get request](https://live.kvv.de/webapp/departures/bystop/de:0000:0003?maxInfos=10&key=377d840e54b59adbe53608ba1aad70e8).
+some easy to handle JSON can be downloaded e.g. for the tram stop "Pionierstraße" using a [simple http get request](https://live.kvv.de/webapp/departures/bystop/de:0000:0003?maxInfos=10&key=377d840e54b59adbe53608ba1aad70e8).
 
 ## The sketch
 
