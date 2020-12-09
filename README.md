@@ -6,14 +6,14 @@ home I decided to build a virtual timetable. And since I had some
 spare ESP8266 powered Wemos D1 and a 2.9" tricolor e-paper display I
 decided to use these.
 
-![Breadboard setup](doc/kvv_bb.jpg)
+![Final setup](doc/kvv_final.jpg)
 
-## Setup
+## Breadboard setup
 
 The whole setup is pretty simple and can be wired on a breadboard as
 depicted.
 
-![Wireing](doc/kvv.png)
+![Wiring](doc/kvv.png)
 
 Since the epaper display keeps the data even if not powered at all the
 ESP8266 simply boots up, connects to the (hardcoded) WiFi network,
@@ -21,6 +21,17 @@ downloads the live data, updates the display and then powers down/goes
 into deep sleep. The whole setup can thus be run from a battery with
 the reset button exposed so it can be pushed to boot the ESP8266 and 
 to update the display.
+
+![Breadboard setup](doc/kvv_bb.jpg)
+
+## Final setup
+
+For the final setup depicted above I unsoldered the connector on the
+displays rear and used double sided tape to stick the Wemos D1 to the
+display. A total of eight short wires are needed to connect both
+PCBs. The resulting setup is sufficiently small and robust.
+
+![Final setup rear view](doc/kvv_final_rear.jpg)
 
 ## Where does the data come from?
 
