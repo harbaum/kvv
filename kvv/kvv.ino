@@ -14,8 +14,8 @@
 #define STOP_ID  "PIO"  // Pionierstraße
 // #define STOP_ID  "EPO"    // Europaplatz/Postgalerie
 
-#define WIFI_SSID "********"
-#define WIFI_PASSWORD "********"
+#define WIFI_SSID "Tantil"
+#define WIFI_PASSWORD "c0ffee1234"
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
@@ -27,7 +27,6 @@
 #include <ESP8266HTTPClient.h>
 
 #include <WiFiClientSecureBearSSL.h>
-const uint8_t fingerprint[20] = {0xd2, 0x9d, 0x57, 0x4a, 0x0d, 0xab, 0x7b, 0x41, 0xd7, 0x8b, 0xd2, 0x40, 0x1b, 0x78, 0xec, 0x2c, 0x4a, 0xb6, 0xe6, 0x79};
 
 // Eink pins: DC = D0, CS=D3, BUSY=D2, SRAM_CS=-1, RESET=D1
 ThinkInk_290_Tricolor_Z10 display(D0, D1, D3, -1, D2);
@@ -186,7 +185,7 @@ void setup() {
 
   std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
 
-  client->setFingerprint(fingerprint);
+  client->setInsecure();
 
   HTTPClient https;
 
