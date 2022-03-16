@@ -14,8 +14,8 @@
 #define STOP_ID  "PIO"  // Pionierstraße
 // #define STOP_ID  "EPO"    // Europaplatz/Postgalerie
 
-#define WIFI_SSID "Tantil"
-#define WIFI_PASSWORD "c0ffee1234"
+#define WIFI_SSID "********"
+#define WIFI_PASSWORD "**********"
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
