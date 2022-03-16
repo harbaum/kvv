@@ -11,8 +11,8 @@
 */
 
 // station ID as used at https://live.kvv.de/
-#define STOP_ID  "de:0000:0003"  // Pionierstraße
-// #define STOP_ID  "de:8212:31"    // Europaplatz
+#define STOP_ID  "PIO"  // Pionierstraße
+// #define STOP_ID  "EPO"    // Europaplatz/Postgalerie
 
 #define WIFI_SSID "********"
 #define WIFI_PASSWORD "********"
