@@ -74,6 +74,14 @@ String utf8ascii(String s) {
   return r;
 }
 
+uint16_t get_dsp_length(String str) {
+  int16_t  x, y;
+  uint16_t w, h;
+
+  display.getTextBounds(utf8ascii(str), 0, 0, &x, &y, &w, &h);
+  return w;
+}
+
 void parse_reply(String payload) {
   int16_t  x, y;
   uint16_t w, h;
@@ -134,25 +142,43 @@ void parse_reply(String payload) {
 
     // up to 6  entries fit onto the screen
     if(i < 6) {
-      int16_t  x, y;
-      uint16_t w, h;
+      uint16_t w, dw;
 
       // route column has red background
       display.fillRect(0, TOP+SKIP*i+5, COL0_WIDTH, SKIP-2, EPD_RED);
 
       // center route in first column
       display.setTextColor(EPD_WHITE);
-      display.getTextBounds(route, 0, 0, &x, &y, &w, &h);
-      display.setCursor((COL0_WIDTH-w)/2-x, TOP+SKIP+SKIP*i);
+      w = get_dsp_length(route);
+      display.setCursor((COL0_WIDTH-w)/2-1, TOP+SKIP+SKIP*i);
       display.print(route);
 
       // left align destination
       display.setTextColor(EPD_BLACK, EPD_WHITE);
+      dw = get_dsp_length(destination);
+      w = get_dsp_length(time);
+
+      // check if destination fits left of time or if it
+      // needs to be truncated
+      if(COL0_WIDTH+2+dw >= 295-w-2) {
+        // destination needs to be truncated.
+
+        // append elipsis (...) and recalculate disdplay width
+        destination.concat("...");
+        dw = get_dsp_length(destination);
+
+        // truncate until destination fits
+        while(COL0_WIDTH+2+dw >= 295-w-2) {             
+          destination = destination.substring(0, destination.length()-4);
+          destination.concat("...");
+          dw = get_dsp_length(destination);
+        }        
+      }
+      
       display.setCursor(COL0_WIDTH+2, TOP+SKIP+SKIP*i);
       display.print(utf8ascii(destination));
 
       // display time right aligned
-      display.getTextBounds(time, 0, 0, &x, &y, &w, &h);
       display.setTextColor(EPD_RED, EPD_WHITE);
       display.setCursor(295-w-2, TOP+SKIP+SKIP*i);
       display.print(time);
