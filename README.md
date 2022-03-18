@@ -39,6 +39,15 @@ The KVV offers a [live timetable](http://live.kvv.de). A quick look
 at the network traffic (or at the embedded Javascript code) reveals that
 some easy to handle JSON can be downloaded e.g. for the tram stop "Pionierstraße" using [this http get request](https://live.kvv.de/webapp/departures/bystop/PIO?maxInfos=10&key=377d840e54b59adbe53608ba1aad70e8).
 
+The station ID of the station to be displayed is hardcoded into the
+sketch. By default this is set to PIO which is the ID of the station
+named Pionierstraße. The API allows to search for IDs by station names
+and even parts of it. E.g. to search for any station including
+"Pionier" in its name use the following search:
+[https://live.kvv.de/webapp/stops/byname/Pionier?key=377d840e54b59adbe53608ba1aad70e8](https://live.kvv.de/webapp/stops/byname/Pionier?key=377d840e54b59adbe53608ba1aad70e8). For
+other stations replace "Pionier" with the phrase you are searching
+for. The station IDs can then be read from the JSON reply.
+
 ## The sketch
 
 The sketch is based on the
