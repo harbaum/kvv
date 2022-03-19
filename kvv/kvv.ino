@@ -217,7 +217,7 @@ void setup() {
 
   Serial.print("[HTTPS] begin...\n");
   if (https.begin(*client, "https://live.kvv.de/webapp/departures/bystop/" STOP_ID
-      "?maxInfos=10"
+      "?maxInfos=6"
       "&key=377d840e54b59adbe53608ba1aad70e8")) {  // HTTPS
 
     Serial.print("[HTTPS] GET...");
