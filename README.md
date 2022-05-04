@@ -30,8 +30,7 @@ The station ID of the station to be displayed is hardcoded into the sketch. By d
 
 ## The sketch
 
-The sketch is based on the
-[BasicHttpsClient.ino](https://github.com/esp8266/Arduino/blob/master/libraries/ESP8266HTTPClient/examples/BasicHttpsClient/BasicHttpsClient.ino) for the ESP8266. The display is driven using the [Adafruit EPD library](https://github.com/adafruit/Adafruit_EPD). And finally the JSON parsing is done using the [ArduinoJson library](https://github.com/bblanchon/ArduinoJson). All these dependencies can be installed from the library manager within the Arduino IDE.
+The sketch is based on the [BasicHttpsClient.ino](https://github.com/esp8266/Arduino/blob/master/libraries/ESP8266HTTPClient/examples/BasicHttpsClient/BasicHttpsClient.ino) for the ESP8266. The display is driven using the [Adafruit EPD library](https://github.com/adafruit/Adafruit_EPD). And finally the JSON parsing is done using the [ArduinoJson library](https://github.com/bblanchon/ArduinoJson). All these dependencies can be installed from the library manager within the Arduino IDE.
 
 A custom generated font is being used since the fonts distributed by Adafruit with the Adafruit GFX library only include 7 bit fonts and we need an 8 bit font for the german umlauts used by the KVV.
 
