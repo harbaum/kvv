@@ -1,3 +1,5 @@
+Update 04.05.2022: It seems like the KVV time table service this project makes use of is gone. This project thus does not work anymore.
+
 # KVV
 
 We recently (Nov 2020) got a new tram extension in Karlsruhe, Germany. To celebrate the fact that there's now a station pretty close to our home I decided to build a virtual timetable. And since I had some spare ESP8266 powered Wemos D1 and a 2.9" tricolor e-paper display I decided to use these.
