@@ -1,4 +1,4 @@
-Update 04.05.2022: It seems like the KVV time table service this project makes use of is gone. This project thus does not work anymore.
+*Update 11.05.2022*: The KVV time table service this project made use of is gone. This code has been updated to support the newer API.
 
 # KVV
 
@@ -24,9 +24,9 @@ For the final setup depicted above I unsoldered the connector on the displays re
 
 ## Where does the data come from?
 
-The KVV offers a [live timetable](http://live.kvv.de). A quick look at the network traffic (or at the embedded Javascript code) reveals that some easy to handle JSON can be downloaded e.g. for the tram stop "Pionierstraße" using [this http get request](https://live.kvv.de/webapp/departures/bystop/PIO?maxInfos=10&key=377d840e54b59adbe53608ba1aad70e8).
+The KVV offers a [live timetable](http://live.kvv.de). A quick look at the network traffic (or at the embedded Javascript code) reveals that some easy to handle JSON can be downloaded e.g. for the tram stop "Pionierstraße" using [this http get request](https://projekte.kvv-efa.de/sl3-alone/XSLT_DM_REQUEST?outputFormat=JSON&coordOutputFormat=WGS84[dd.ddddd]&depType=stopEvents&locationServerActive=1&mode=direct&name_dm=7000238&type_dm=stop&useOnlyStops=1&useRealtime=1&limit=10).
 
-The station ID of the station to be displayed is hardcoded into the sketch. By default this is set to PIO which is the ID of the station named Pionierstraße. The API allows to search for IDs by station names and even parts of it. E.g. to search for any station including "Pionier" in its name use the following search: [https://live.kvv.de/webapp/stops/byname/Pionier?key=377d840e54b59adbe53608ba1aad70e8](https://live.kvv.de/webapp/stops/byname/Pionier?key=377d840e54b59adbe53608ba1aad70e8). For other stations replace "Pionier" with the phrase you are searching for. The station IDs can then be read from the JSON reply.
+The station ID of the station to be displayed is hardcoded into the sketch. By default this is set to 7000238 which is the ID of the station named Pionierstraße. The API allows to search for IDs by station names and even parts of it. E.g. to search for any station including "Pionier" in its name use the following search: [https://www.kvv.de/tunnelEfaDirect.php?action=XSLT_STOPFINDER_REQUEST&name_sf=pionier&outputFormat=JSON&type_sf=any](https://www.kvv.de/tunnelEfaDirect.php?action=XSLT_STOPFINDER_REQUEST&name_sf=pionier&outputFormat=JSON&type_sf=any). For other stations replace "Pionier" with the phrase you are searching for. The station IDs can then be read from the '''stateless''' field in the JSON reply.
 
 ## The sketch
 

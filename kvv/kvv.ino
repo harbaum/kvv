@@ -10,16 +10,23 @@
    want to have the display updated. 
 */
 
-// station ID as used at https://live.kvv.de/
-#define STOP_ID  "PIO"  // Pionierstraße
-// #define STOP_ID  "EPO"    // Europaplatz/Postgalerie
+// stop IDs can be found in the JSON reply for e.g. Pionierstraße using this request in a regular browser:
+// https://www.kvv.de/tunnelEfaDirect.php?action=XSLT_STOPFINDER_REQUEST&name_sf=pionierstraße&outputFormat=JSON&type_sf=any
+#define STOP_ID  "7000238"  // Pionierstraße
+// #define STOP_ID  "7001004"    // Europaplatz/Postgalerie
 
-#define WIFI_SSID "********"
-#define WIFI_PASSWORD "**********"
+// number of departures to be requested
+#define LIMIT "6"   // the epaper display can display six text lines
+
+// make sure there's a wifi.h with the following contents:
+// #define WIFI_SSID "<your ssid>"
+// #define WIFI_PASSWORD "<your password>"
+#include "wifi.h"
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <Adafruit_ThinkInk.h>
+#include <time.h>
 
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
@@ -82,36 +89,77 @@ uint16_t get_dsp_length(String str) {
   return w;
 }
 
-void parse_reply(String payload) {
+void parse_time(struct tm *timeinfo, const JsonObject &obj) {
+  memset(timeinfo, 0, sizeof(struct tm));
+  if(obj.containsKey("year")) timeinfo->tm_year = atoi(obj["year"]) - 1900;
+  if(obj.containsKey("month")) timeinfo->tm_mon = atoi(obj["month"]) - 1;
+  if(obj.containsKey("day")) timeinfo->tm_mday = atoi(obj["day"]);
+  if(obj.containsKey("hour")) timeinfo->tm_hour = atoi(obj["hour"]);
+  if(obj.containsKey("minute")) timeinfo->tm_min = atoi(obj["minute"]);
+}
+
+// void parse_reply(String payload) {
+void parse_reply(Stream &payload) {
   int16_t  x, y;
   uint16_t w, h;
-  
-  DynamicJsonDocument doc(2048);
+
+  DynamicJsonDocument doc(4096);
           
+  // install filters to extract only the required information from the stream
+  StaticJsonDocument<300> filter;
+  filter["dateTime"] = true;
+  filter["dm"]["points"]["point"]["name"] = true;      // station name
+  filter["departureList"][0]["countdown"] = true;
+  filter["departureList"][0]["realDateTime"]["hour"] = true;
+  filter["departureList"][0]["realDateTime"]["minute"] = true;
+  filter["departureList"][0]["dateTime"]["hour"] = true;
+  filter["departureList"][0]["dateTime"]["minute"] = true;
+  filter["departureList"][0]["servingLine"]["direction"] = true;
+  filter["departureList"][0]["servingLine"]["symbol"] = true;
+
   // start parsing
-  DeserializationError error = deserializeJson(doc, payload); 
+  DeserializationError error = deserializeJson(doc, payload, DeserializationOption::Filter(filter)); 
   if (error) {
     Serial.print(F("deserializeJson() failed: "));
     Serial.println(error.f_str());
     return;
   }
 
+  JsonObject obj = doc.as<JsonObject>();
+
+  // get stop name
+  const char *stopName = obj["dm"]["points"]["point"]["name"];  
+  // find last comma in string and cut at the first non-space afterwards
+  // to get rid of city name
+  const char *c = stopName;
+  for(int i=0; i < strlen(c);i++)
+    if(c[i] == ',') {
+      for(i++;c[i]==' ';i++);
+      stopName = c+i;
+    }
+
+  // parse time from reply into timeinfo
+  struct tm timeinfo;
+  parse_time(&timeinfo, obj["dateTime"]);
+
+  // convert to time_t for time span calculation
+  time_t now = mktime(&timeinfo);
+
+  // one would usually use strftime, but that adds leading 0's to the
+  // month and hour which we don't want to save space
+  // max length of timestring is "DD.MM.YY HH:mm" -> 15 Bytes incl \0-term 
+  char timeStamp[15];
+  sprintf(timeStamp, "%d.%d.%02d %d:%02d", 
+    timeinfo.tm_mday, timeinfo.tm_mon+1, timeinfo.tm_year-100,
+    timeinfo.tm_hour, timeinfo.tm_min);
+  
+  Serial.printf("Name: %s\n", stopName);
+  Serial.printf("Timestamp: %s\n", timeStamp);
+
   display.begin(THINKINK_TRICOLOR);
   display.setFont(&FreeSansBold9pt8b);
   display.clearBuffer();
   display.setTextSize(1);
-
-  JsonObject obj = doc.as<JsonObject>();
-
-  String stopName = obj[String("stopName")];
-  String timeStamp = obj[String("timestamp")];
-
-  // reformat time string from YYYY-MM-DD HH:MM:SS to a narrower
-  // (D)D.(M)M.YY (H)H:MM
-  timeStamp = timeStamp.substring((timeStamp.charAt(8)=='0')?9:8,10) + "." +
-              timeStamp.substring((timeStamp.charAt(5)=='0')?6:5,7) + "." +
-              timeStamp.substring(2,4) + " " +
-              timeStamp.substring((timeStamp.charAt(11)=='0')?12:11,16);
 
   // top row has a black background
   display.fillRect(0, 0, 296, SKIP, EPD_BLACK);
@@ -127,19 +175,46 @@ void parse_reply(String payload) {
   display.setCursor(295-w-2, TOP);
   display.print(timeStamp);
   
-  for(int i=0;i<obj[String("departures")].size();i++) {  
-    JsonObject nobj = obj[String("departures")][i];
-    String route = nobj[String("route")];
-    String destination = nobj[String("destination")];
-    String time = nobj[String("time")];
-    if(time == "0") time = "sofort";
+  // TODO: Delayed trains are listed first even if their real departure time
+  // is later then other trains. We'd like to display them in their real
+  // departure order instead.
+  for(int i=0;i<obj["departureList"].size();i++) {  
+    JsonObject nobj = obj["departureList"][i];     // i'th object in departure list 
 
-    // other (yet unused) fields:
-    // traction: integer, number of carriages. 0=1 carriage, 1=1, 2=2, ...
-    // lowfloor: true, use wheelchair icon
-    // realtime: so far, only "true" has been observed
-    // direction: always 1 or 2 for forth and back
+    // some directions include redirects of the form "> next line", like e.g.
+    // "Rheinbergstraße > 75 Bruchweg"
+    // This is too long for the small display, so we get rid of everything
+    // after the ">"
+    const char *direction = nobj["servingLine"]["direction"];
+    char *c = (char*)direction;
+    while(*c && *c != '>') c++;  // search for '>'
+    if(*c) {                     // '>' was found
+      c--;                       // skip before '>'
+      while(*c == ' ') c--;      // skip back over whitespaces
+      c[1] = '\0';               // terminate string after last non-space
+    }   
 
+    // further (previus) direction/destination handlng requires a String object
+    String destination(direction);
+    
+    const char *route = nobj["servingLine"]["symbol"];
+    
+    // countdown are the minutes to go
+    int countdown = atoi(nobj["countdown"]);
+
+    // get readDateTime if present, otherwise dateTime
+    struct tm deptime;
+    if(nobj.containsKey("realDateTime")) parse_time(&deptime, nobj["realDateTime"]);
+    else                                 parse_time(&deptime, nobj["dateTime"]);
+
+    // create nice time string
+    char time[8];
+    if(countdown == 0)       strcpy(time, "sofort");
+    else if(countdown < 10)  sprintf(time, "%d min", countdown);
+    else                     sprintf(time, "%d:%02d", deptime.tm_hour, deptime.tm_min);      
+
+    Serial.printf("[%s] %s %s\n", route, direction, time);
+  
     // up to 6  entries fit onto the screen
     if(i < 6) {
       uint16_t w, dw;
@@ -216,9 +291,10 @@ void setup() {
   HTTPClient https;
 
   Serial.print("[HTTPS] begin...\n");
-  if (https.begin(*client, "https://live.kvv.de/webapp/departures/bystop/" STOP_ID
-      "?maxInfos=6"
-      "&key=377d840e54b59adbe53608ba1aad70e8")) {  // HTTPS
+  if (https.begin(*client, "https://projekte.kvv-efa.de/sl3-alone/XSLT_DM_REQUEST?"
+        "outputFormat=JSON&coordOutputFormat=WGS84[dd.ddddd]&depType=stopEvents&"
+        "locationServerActive=1&mode=direct&name_dm=" STOP_ID "&type_dm=stop&"
+        "useOnlyStops=1&useRealtime=1&limit=" LIMIT)) {
 
     Serial.print("[HTTPS] GET...");
     // start connection and send HTTP header
@@ -231,7 +307,8 @@ void setup() {
 
       // file found at server
       if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY)
-        parse_reply(https.getString());
+        parse_reply(https.getStream());
+        
     } else
       Serial.printf(" failed, error: %s\n", https.errorToString(httpCode).c_str());
 
